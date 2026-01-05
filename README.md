@@ -11,7 +11,7 @@ This project demonstrates
 - **Problem Solving:** Automating decisions that traditionally require scholars.
 
 ## 🚀 Live Demo
-👉 **[Try it here](https://[YOUR-GITHUB-USERNAME].github.io/Islamic-Inheritance-Calculator/)**
+👉 **[Try it here](https://Qudoos07.github.io/Islamic-Inheritance-Calculator/)**
 
 ## 🛠️ How It Works
 The calculator follows these rules:
