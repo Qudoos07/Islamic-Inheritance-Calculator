@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Islamic Inheritance (Faraid) Calculator</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f4f4f9; 
+            padding: 20px; 
+            text-align: center; 
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+        }
+        h1 { color: #2c3e50; margin-bottom: 5px; }
+        .subtitle { color: #7f8c8d; margin-bottom: 25px; }
+        .input-group { margin: 15px 0; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; }
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            font-size: 16px; 
+            box-sizing: border-box; /* Fixes padding issues */
+        }
+        button { 
+            background: #27ae60; 
+            color: white; 
+            border: none; 
+            padding: 15px 20px; 
+            font-size: 18px; 
+            font-weight: bold;
+            border-radius: 5px; 
+            cursor: pointer; 
+            width: 100%; 
+            margin-top: 20px; 
+            transition: background 0.3s;
+        }
+        button:hover { background: #219150; }
+        #result { 
+            margin-top: 30px; 
+            text-align: left; 
+            background: #e8f8f5; 
+            padding: 20px; 
+            border-radius: 8px; 
+            display: none; 
+            border: 1px solid #a2d9ce;
+        }
+        .share-item { 
+            border-bottom: 1px solid #dcdcdc; 
+            padding: 12px 0; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+        }
+        .share-item strong { color: #16a085; }
+        .share-item:last-child { border-bottom: none; }
+        .math-note { font-size: 0.85em; color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚖️ Faraid Calculator</h1>
+        <p class="subtitle">Algorithmic Distribution based on Sharia Inheritance Rules</p>
+        
+        <div class="input-group">
+            <label>💰 Total Estate Value (Currency)</label>
+            <input type="number" id="estate" placeholder="e.g. 100000" min="0">
+        </div>
+
+        <div class="input-group">
+            <label>💍 Surviving Spouse?</label>
+            <select id="spouse">
+                <option value="none">None</option>
+                <option value="wife">Wife (Widow)</option>
+                <option value="husband">Husband (Widower)</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>👦 Number of Sons</label>
+            <input type="number" id="sons" value="0" min="0">
+        </div>
+
+        <div class="input-group">
+            <label>👧 Number of Daughters</label>
+            <input type="number" id="daughters" value="0" min="0">
+        </div>
+
+        <button onclick="calculateShares()">Calculate Distribution</button>
+
+        <div id="result">
+            <h3 style="margin-top:0; color:#2c3e50;">📊 Distribution Results:</h3>
+            <div id="breakdown"></div>
+        </div>
+    </div>
+
+    <script>
+        function calculateShares() {
+            // 1. Get Inputs
+            const estate = parseFloat(document.getElementById('estate').value);
+            const spouse = document.getElementById('spouse').value;
+            const sons = parseInt(document.getElementById('sons').value) || 0;
+            const daughters = parseInt(document.getElementById('daughters').value) || 0;
+            
+            // Validation
+            if (!estate || estate < 0) { 
+                alert("Please enter a valid estate value."); 
+                return; 
+            }
+
+            let outputHtml = "";
+            let distributedAmount = 0;
+            let remaining = 1.0; // Starts at 100%
+
+            // 2. Spouse Logic (Quranic Fixed Share)
+            // Rule: Husband gets 1/2 (no kids) or 1/4 (with kids)
+            // Rule: Wife gets 1/4 (no kids) or 1/8 (with kids)
+            
+            const hasChildren = (sons > 0 || daughters > 0);
+            let spouseShareFraction = 0;
+            let spouseTitle = "";
+
+            if (spouse === 'husband') {
+                spouseShareFraction = hasChildren ? 0.25 : 0.5;
+                spouseTitle = hasChildren ? "Husband (1/4 due to children)" : "Husband (1/2, no children)";
+            } else if (spouse === 'wife') {
+                spouseShareFraction = hasChildren ? 0.125 : 0.25;
+                spouseTitle = hasChildren ? "Wife (1/8 due to children)" : "Wife (1/4, no children)";
+            }
+
+            if (spouseShareFraction > 0) {
+                let amount = estate * spouseShareFraction;
+                outputHtml += `<div class="share-item">
+                    <div><strong>${spouseTitle}</strong></div>
+                    <span>${amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                </div>`;
+                distributedAmount += amount;
+            }
+
+            // 3. Children Logic (Asab'ah - Residuary)
+            // Rule: Male takes double the portion of female (2:1 Ratio)
+            
+            let residueCash = estate - distributedAmount;
+            
+            // Total "Units": Each Son = 2 units, Each Daughter = 1 unit
+            const totalUnits = (sons * 2) + daughters;
+
+            if (totalUnits > 0) {
+                // Value of 1 single unit
+                let unitValue = residueCash / totalUnits;
+                
+                if (sons > 0) {
+                    let totalSonShare = unitValue * 2 * sons;
+                    let perSon = unitValue * 2;
+                    outputHtml += `<div class="share-item">
+                        <div><strong>Sons (${sons})</strong><br><span class="math-note">Residue (2 shares each)</span></div>
+                        <span>${totalSonShare.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    </div>`;
+                    if (sons > 1) {
+                        outputHtml += `<div class="share-item" style="background:none; border:none; padding-top:0;">
+                            <span class="math-note">↳ Each Son gets: ${perSon.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        </div>`;
+                    }
+                }
+                
+                if (daughters > 0) {
+                    let totalDaughterShare = unitValue * daughters;
+                    let perDaughter = unitValue;
+                    outputHtml += `<div class="share-item">
+                        <div><strong>Daughters (${daughters})</strong><br><span class="math-note">Residue (1 share each)</span></div>
+                        <span>${totalDaughterShare.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    </div>`;
+                    if (daughters > 1) {
+                         outputHtml += `<div class="share-item" style="background:none; border:none; padding-top:0;">
+                            <span class="math-note">↳ Each Daughter gets: ${perDaughter.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        </div>`;
+                    }
+                }
+            } else {
+                // No children to take residue
+                if (residueCash > 0.01) {
+                    outputHtml += `<div class="share-item">
+                        <div><strong>Remaining Estate (Asab'ah)</strong><br><span class="math-note">To be distributed to parents/siblings (Not calculated in this demo)</span></div>
+                        <span>${residueCash.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    </div>`;
+                }
+            }
+
+            // 4. Show Result
+            document.getElementById('breakdown').innerHTML = outputHtml;
+            document.getElementById('result').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
